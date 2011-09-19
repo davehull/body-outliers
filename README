@@ -1,0 +1,23 @@
+# body-outliers.py
+#
+# author: Dave Hull
+# license: public domain
+#
+# Like it's older sister, meta-outliers.py, body-outliers.py is a forensics
+# tool that analyzes the output of The Sleuth Kit's fls command. Unlike its
+# sister, body-outliers.py can only run against an fls bodyfile.
+#
+# body-outliers.py calculates averages and standard deviations for metadata
+# elements on a per directory basis and will find outliers based on the
+# arguments provided by the user. The script supports two modes, an "and" mode
+# and an "or" mode. In "and" mode, both metadata elements must be outliers in
+# order for a file to be included in the output. In "or" mode only one of the
+# two elements must be an outlier. As with meta-outliers.py the number of
+# standard deviations that makes a file an outlier is configurable via the
+# command line.
+#
+# For usage info:
+# ./body-outliers.py -h
+#
+# To do:
+# It's a secret.
