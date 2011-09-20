@@ -6,7 +6,7 @@
 #
 # Todo: 
 # 
-# Much more, this is just a PoC/starting point.
+# It's a secret.
 
 import re, os, math, argparse
 from time import gmtime, strftime 
@@ -177,11 +177,11 @@ def get_deviants():
                                 print "\nPath avg %s: %10d  std dev: %14.2f  avg %s: %s  std dev: %14.2f  path: %s" % (args.aspect1, avg1, std_dev1, args.aspect2, avg2_time, std_dev2, pname)
                             no_header = False
                             if aspect1_time and aspect2_time:
-                                print "    file %s: %s      dev: %14.2f      %s: %s      dev: %14.2f  file:   %s" % (args.aspect1, aspect1_time, dev1[filename], args.aspect2, aspect2_time, dev2[filename], filename)
+                                print "    file %s: %s     devs: %14.2f      %s: %s     devs: %14.2f  file:   %s" % (args.aspect1, aspect1_time, (dev1[filename] / std_dev1), args.aspect2, aspect2_time, (dev2[filename] / std_dev2), filename)
                             elif aspect1_time and not aspect2_time:
-                                print "    file %s: %s      dev: %14.2f      %s: %10d      dev: %14.2f  file:   %s" % (args.aspect1, aspect1_time, dev1[filename], args.aspect2, coord[1], dev2[filename], filename)
+                                print "    file %s: %s     devs: %14.2f      %s: %10d     devs: %14.2f  file:   %s" % (args.aspect1, aspect1_time, (dev1[filename] / std_dev1), args.aspect2, coord[1], (dev2[filename] / std_dev2), filename)
                             elif aspect2_time and not aspect1_time:
-                                print "    file %s: %10d      dev: %14.2f      %s: %s      dev: %14.2f  file:    %s" % (args.aspect1, coord[0], dev1[filename], args.aspect2, aspect2_time, dev2[filename], filename)
+                                print "    file %s: %10d     devs: %14.2f      %s: %s     devs: %14.2f  file:    %s" % (args.aspect1, coord[0], (dev1[filename] / std_dev1), args.aspect2, aspect2_time, (dev2[filename] / std_dev2), filename)
                         else:
                             if aspect1_time:
                                 avg1_time = strftime("%Y %m %d %H:%M:%S", gmtime(avg1))
@@ -190,12 +190,11 @@ def get_deviants():
                                 avg2_time = strftime("%Y %m %d %H:%M:%S", gmtime(avg2))
                                 aspect2_time = strftime("%Y %m %d %H:%M:%S", gmtime(coord[1]))
                             if aspect1_time and aspect2_time:
-                                print "    file %s: %s      dev: %14.2f      %s: %s      dev: %14.2f  file:   %s" % (args.aspect1, aspect1_time, dev1[filename], args.aspect2, aspect2_time, dev2[filename], filename)
-                                # print "    file %s: %s      %s: %s       Dev: %12.2f  File:   %s" % (args.aspect1, aspect1_time, args.aspect2, aspect2_time, dev1[filename], filename)
+                                print "    file %s: %s     devs: %14.2f      %s: %s     devs: %14.2f  file:   %s" % (args.aspect1, aspect1_time, (dev1[filename] / std_dev1), args.aspect2, aspect2_time, (dev2[filename] / std_dev2), filename)
                             elif aspect1_time and not aspect2_time:
-                                print "    file %s: %s      dev: %14.2f      %s: %10d      dev: %14.2f  file:   %s" % (args.aspect1, aspect1_time, dev1[filename], args.aspect2, coord[1], dev2[filename], filename)
+                                print "    file %s: %s     devs: %14.2f      %s: %10d     devs: %14.2f  file:   %s" % (args.aspect1, aspect1_time, (dev1[filename] / std_dev1), args.aspect2, coord[1], (dev2[filename] / std_dev2), filename)
                             elif aspect2_time and not aspect1_time:
-                                print "    file %s: %10d      dev: %14.2f      %s: %s      dev: %14.2f  file:    %s" % (args.aspect1, coord[0], dev1[filename], args.aspect2, aspect2_time, dev2[filename], filename)
+                                print "    file %s: %10d     devs: %14.2f      %s: %s     devs: %14.2f  file:    %s" % (args.aspect1, coord[0], (dev1[filename] / std_dev1), args.aspect2, aspect2_time, (dev2[filename] / std_dev2), filename)
                 else:
                     if math.fabs(dev1[filename]) > outlier1 or math.fabs(dev2[filename]) > outlier2:
                         if no_header:
@@ -213,11 +212,11 @@ def get_deviants():
                                 print "\nPath avg %s: %10d  std dev: %14.2f  avg %s: %s  std dev: %14.2f  path: %s" % (args.aspect1, avg1, std_dev1, args.aspect2, avg2_time, std_dev2, pname)
                             no_header = False
                             if aspect1_time and aspect2_time:
-                                print "    file %s: %s      dev: %14.2f      %s: %s      dev: %14.2f  file:   %s" % (args.aspect1, aspect1_time, dev1[filename], args.aspect2, aspect2_time, dev2[filename], filename)
+                                print "    file %s: %s     devs: %14.2f      %s: %s     devs: %14.2f  file:   %s" % (args.aspect1, aspect1_time, (dev1[filename] / std_dev1), args.aspect2, aspect2_time, (dev2[filename] / std_dev2), filename)
                             elif aspect1_time and not aspect2_time:
-                                print "    file %s: %s      dev: %14.2f      %s: %10d      dev: %14.2f  file:   %s" % (args.aspect1, aspect1_time, dev1[filename], args.aspect2, coord[1], dev2[filename], filename)
+                                print "    file %s: %s     devs: %14.2f      %s: %10d     devs: %14.2f  file:   %s" % (args.aspect1, aspect1_time, (dev1[filename] / std_dev1), args.aspect2, coord[1], (dev2[filename] / std_dev2), filename)
                             elif aspect2_time and not aspect1_time:
-                                print "    file %s: %10d      dev: %14.2f      %s: %s      dev: %14.2f  file:    %s" % (args.aspect1, coord[0], dev1[filename], args.aspect2, aspect2_time, dev2[filename], filename)
+                                print "    file %s: %10d     devs: %14.2f      %s: %s     devs: %14.2f  file:    %s" % (args.aspect1, coord[0], (dev1[filename] / std_dev1), args.aspect2, aspect2_time, (dev2[filename] / std_dev2), filename)
                         else:
                             if aspect1_time:
                                 avg1_time = strftime("%Y %m %d %H:%M:%S", gmtime(avg1))
@@ -226,12 +225,11 @@ def get_deviants():
                                 avg2_time = strftime("%Y %m %d %H:%M:%S", gmtime(avg2))
                                 aspect2_time = strftime("%Y %m %d %H:%M:%S", gmtime(coord[1]))
                             if aspect1_time and aspect2_time:
-                                print "    file %s: %s      dev: %14.2f      %s: %s      dev: %14.2f  file:   %s" % (args.aspect1, aspect1_time, dev1[filename], args.aspect2, aspect2_time, dev2[filename], filename)
-                                # print "    file %s: %s      %s: %s       Dev: %12.2f  File:   %s" % (args.aspect1, aspect1_time, args.aspect2, aspect2_time, dev1[filename], filename)
+                                print "    file %s: %s     devs: %14.2f      %s: %s     devs: %14.2f  file:   %s" % (args.aspect1, aspect1_time, (dev1[filename] / std_dev1), args.aspect2, aspect2_time, (dev2[filename] / std_dev2), filename)
                             elif aspect1_time and not aspect2_time:
-                                print "    file %s: %s      dev: %14.2f      %s: %10d      dev: %14.2f  file:   %s" % (args.aspect1, aspect1_time, dev1[filename], args.aspect2, coord[1], dev2[filename], filename)
+                                print "    file %s: %s     devs: %14.2f      %s: %10d     devs: %14.2f  file:   %s" % (args.aspect1, aspect1_time, (dev1[filename] / std_dev1), args.aspect2, coord[1], (dev2[filename] / std_dev2), filename)
                             elif aspect2_time and not aspect1_time:
-                                print "    file %s: %10d      dev: %14.2f      %s: %s      dev: %14.2f  file:    %s" % (args.aspect1, coord[0], dev1[filename], args.aspect2, aspect2_time, dev2[filename], filename)
+                                print "    file %s: %10d     devs: %14.2f      %s: %s     devs: %14.2f  file:    %s" % (args.aspect1, coord[0], (dev1[filename] / std_dev1), args.aspect2, aspect2_time, (dev2[filename] / std_dev2), filename)
 
             aspect1_total = aspect2_total = dev_sum1 = dev_sum2 = 0
 
