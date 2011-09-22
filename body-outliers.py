@@ -8,7 +8,7 @@
 # 
 # It's a secret.
 
-def check_args(args):
+def check_args(stddevs, aspect1, aspect2, filename, mode):
     print "[+] Checking command line arguments."
 
     if float(args.stddevs) > 0:
@@ -46,7 +46,7 @@ def check_args(args):
 
 def get_deviants(args):
     zero_cnt = aspect1_zero_cnt = aspect2_zero_cnt = aspect2_total =\
-    aspect1_total = fname_skip_cnt = dev_sum1 = dev_sum2 = 0
+    aspect1_total = fname_skip_cnt = dev_sum1 = dev_sum2 = bad_line = 0
     aspect1_time  = aspect2_time = True
     current_path  = None
     stddevs       = float(args.stddevs)
@@ -56,7 +56,11 @@ def get_deviants(args):
 
     fi = open(args.filename, 'rb')
     for line in fi:
-        md5,ppath,inode,mode,uid,gid,size,atime,mtime,ctime,crtime = line.split("|")
+        try:
+            md5,ppath,inode,mode,uid,gid,size,atime,mtime,ctime,crtime = line.split("|")
+        except:
+            bad_line += 1
+            continue
         
         if args.aspect1 == 'meta_addr': 
             meta = inode.split("-")
@@ -106,6 +110,7 @@ def get_deviants(args):
     print "[+] Discarded %d files with 0 for %s." % (aspect1_zero_cnt, args.aspect1) 
     print "[+] Discarded %d files with 0 for %s." % (aspect2_zero_cnt, args.aspect2) 
     print "[+] Discarded %d files named .. or ." % (fname_skip_cnt)
+    print "[+] Discarded %d bad lines from %s." % (bad_line, args.filename)
 
     print "Metadata %s %s %s outliers that are %2.2f standard deviations from average values for their respective paths." % (args.aspect1, args.mode, args.aspect2, stddevs)
     print "==========================================================================================================================="
@@ -257,5 +262,5 @@ if __name__ == '__main__':
         , dest = 'mode', default = 'and')
     args = parser.parse_args()
 
-    if check_args(args):
+    if check_args(args.stddevs, args.aspect1, args.aspect2, args.filename, args.mode):
         get_deviants(args)
