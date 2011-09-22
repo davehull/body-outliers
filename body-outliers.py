@@ -8,115 +8,101 @@
 # 
 # It's a secret.
 
-import re, os, math, argparse
-from time import gmtime, strftime 
+def check_args(args):
+    print "[+] Checking command line arguments."
 
-parser = argparse.ArgumentParser(description = \
-    'body-outliers.py compares two aspects of bodyfile metadata and returns ' \
-    'a list of outliers based on the requested criteria. For example file ' \
-    'creation times and metadata addresses can be selected as the two ' \
-    'criteria to be used to find outliers. In this instance, body-outliers ' \
-    'will calculate the average and standard deviations for creation times ' \
-    'and metadata addresses for all files on a per direcotry basis. Files ' \
-    'that are more than the specified number of standard deviations away ' \
-    'from normal are printed to standard out along with their metadata ' \
-    'values and the path they were found in and the paths metadata values.')
-parser.add_argument('--devs', help = '--devs defines the outlier threshold. ' \
-    'Default is 1, higher values will further reduce the data set.', \
-    dest = 'stddevs', default = 1.0)
-parser.add_argument('--file', help = 'Output from Brian Carrier\'s fls -arp ' \
-    '(The Sleuth Kit) that has been saved to a file for processing.', \
-    dest = 'filename')
-parser.add_argument('--aspect1', help = '--aspect1 defines the first field ' \
-    'to be used to determine outliers. The default is metadata addresses. ' \
-    'Valid choices also include atime, mtime, ctime or crtime.', dest = \
-    'aspect1', default = 'meta_addr')
-parser.add_argument('--aspect2', help = '--aspect2 defines the second field ' \
-    'to be used to determine outliers. The default is ctime. Valid choices ' \
-    'also include atime, mtime, ctime or crtime.', dest = 'aspect2', \
-    default = 'ctime')
-parser.add_argument('--mode', help = '--mode can be "and" or "or" (no quotes) ' \
-    'meaning that with "and" a file will only be included in the output if ' \
-    'both aspect1 and aspect2 meet their respective outlier threshold. ' \
-    'If --mode is "or" a file will be included in the output if either aspect ' \
-    'is an outlier. Default mode is "and"', dest = 'mode', default = 'and')
-args = parser.parse_args()
-
-def get_deviants():
-    zero_cnt = aspect1_zero_cnt = aspect2_zero_cnt = aspect2_total =\
-    aspect1_total = fname_skip_cnt = dev_sum1 = dev_sum2 = 0
-    aspect1_time = aspect2_time = True
-    dev1 = {}
-    dev2 = {}
-    path = {}
-    current_path    = None
-    stddevs         = float(args.stddevs)   # Modify this to control what files are included in results. Default, anything above 1 std dev
+    if float(args.stddevs) > 0:
+        print "[+] Outlier threshold is %s" % args.stddevs
+    else:
+        print "[+] --devs must be a positive number (floating points are acceptable)."
+        quit()
 
     if args.aspect1 == args.aspect2:
-        print "You have set aspect1 and aspect2 to the same metadata element. Try again."
+        print "[+] --aspect1 and --aspect2 are the same metadata element. They must be different."
+        quit()
+
+    if args.aspect1 not in ['atime', 'ctime', 'crtime', 'mtime', 'meta_addr']:
+        print "[+] Invalid metadata element given for --aspect1: %s" % args.aspect1
+        quit()
+
+    if args.aspect2 not in ['atime', 'ctime', 'crtime', 'mtime', 'meta_addr']:
+        print "[+] Invalid metadata element given for --aspect2: %s" % args.aspect2
         quit()
 
     fi = open(args.filename, 'rb')
-    if fi.read(1) == '0':
-        fi.seek(0)
-        for line in fi:
-            md5,ppath,inode,mode,uid,gid,size,atime,mtime,ctime,crtime = line.split("|")
-            
-            if args.aspect1 == 'meta_addr': 
-                meta = inode.split("-")
-                aspect1 = int(meta[0])
-                aspect1_time = False
-            elif args.aspect1 == 'atime':
-                aspect1 = int(atime)
-            elif args.aspect1 == 'mtime':
-                aspect1 = int(mtime)
-            elif args.aspect1 == 'ctime':
-                aspect1 = int(ctime)
-            elif args.aspect1 == 'crtime':
-                aspect1 = int(crtime)
-            else:
-                print "[+] Invalid aspect1 value provided. Acceptable values are meta_addr, atime, crtime, ctime or mtime."
-                quit()
-
-            if aspect1 == 0:
-                aspect1_zero_cnt += 1
-                continue
-
-            if args.aspect2 == 'meta_addr': 
-                meta = inode.split("-")
-                aspect2 = int(meta[0])
-                aspect2_time = False
-            elif args.aspect2 == 'atime':
-                aspect2 = int(atime)
-            elif args.aspect2 == 'mtime':
-                aspect2 = int(mtime)
-            elif args.aspect2 == 'ctime':
-                aspect2 = int(ctime)
-            elif args.aspect2 == 'crtime':
-                aspect2 = int(crtime)
-            else:
-                print "[+] Invalid aspect2 value provided. Acceptable values are meta_addr, atime, crtime, ctime or mtime."
-                quit()
-
-            if aspect2 == 0:
-                aspect2_zero_cnt += 1
-                continue
-
-            fname = os.path.basename(ppath).rstrip()
-            if fname == ".." or fname == ".":
-                fname_skip_cnt += 1
-                continue
-
-            pname = os.path.dirname(ppath).rstrip()
-            if pname not in path:
-                path[pname] = {}
-
-            path[pname][fname] = aspect1, aspect2
-
-    else:
-        print "body-outliers.py expects an fls bodyfile as the --file argument, but byte offset 0 didn't contain the expected value.\n\n"
+    if fi.read(1) != '0':
+        print "[+] --file does not appear to be an file bodyfile."
+        fi.close()
         quit()
-                
+    else:
+        fi.close()
+
+    if args.mode not in ['and', 'or']:
+        print "[+] Invalid --mode argument: %s" % args.mode
+        quit()
+
+    return True
+
+
+def get_deviants(args):
+    zero_cnt = aspect1_zero_cnt = aspect2_zero_cnt = aspect2_total =\
+    aspect1_total = fname_skip_cnt = dev_sum1 = dev_sum2 = 0
+    aspect1_time  = aspect2_time = True
+    current_path  = None
+    stddevs       = float(args.stddevs)
+    dev1 = {}
+    dev2 = {}
+    path = {}
+
+    fi = open(args.filename, 'rb')
+    for line in fi:
+        md5,ppath,inode,mode,uid,gid,size,atime,mtime,ctime,crtime = line.split("|")
+        
+        if args.aspect1 == 'meta_addr': 
+            meta = inode.split("-")
+            aspect1 = int(meta[0])
+            aspect1_time = False
+        elif args.aspect1 == 'atime':
+            aspect1 = int(atime)
+        elif args.aspect1 == 'mtime':
+            aspect1 = int(mtime)
+        elif args.aspect1 == 'ctime':
+            aspect1 = int(ctime)
+        elif args.aspect1 == 'crtime':
+            aspect1 = int(crtime)
+
+        if aspect1 == 0:
+            aspect1_zero_cnt += 1
+            continue
+
+        if args.aspect2 == 'meta_addr': 
+            meta = inode.split("-")
+            aspect2 = int(meta[0])
+            aspect2_time = False
+        elif args.aspect2 == 'atime':
+            aspect2 = int(atime)
+        elif args.aspect2 == 'mtime':
+            aspect2 = int(mtime)
+        elif args.aspect2 == 'ctime':
+            aspect2 = int(ctime)
+        elif args.aspect2 == 'crtime':
+            aspect2 = int(crtime)
+
+        if aspect2 == 0:
+            aspect2_zero_cnt += 1
+            continue
+
+        fname = os.path.basename(ppath).rstrip()
+        if fname == ".." or fname == ".":
+            fname_skip_cnt += 1
+            continue
+
+        pname = os.path.dirname(ppath).rstrip()
+        if pname not in path:
+            path[pname] = {}
+
+        path[pname][fname] = aspect1, aspect2
+
     print "[+] Discarded %d files with 0 for %s." % (aspect1_zero_cnt, args.aspect1) 
     print "[+] Discarded %d files with 0 for %s." % (aspect2_zero_cnt, args.aspect2) 
     print "[+] Discarded %d files named .. or ." % (fname_skip_cnt)
@@ -233,4 +219,43 @@ def get_deviants():
 
             aspect1_total = aspect2_total = dev_sum1 = dev_sum2 = 0
 
-get_deviants()
+
+if __name__ == '__main__':
+    import re, os, math, argparse
+    from time import gmtime, strftime 
+
+    parser = argparse.ArgumentParser(description = \
+        'body-outliers.py compares two aspects of bodyfile metadata and ' \
+        'returns a list of outliers based on the requested criteria. For ' \
+        'example file creation times and metadata addresses can be selected ' \
+        'as the two criteria to be used to find outliers. In this instance, ' \
+        'body-outliers will calculate the average and standard deviations ' \
+        'for creation times and metadata addresses for all files on a per ' \
+        'direcotry basis. Files that are more than the specified number of ' \
+        'standard deviations away from normal are printed to standard out ' \
+        'along with their metadata values and the path they were found in ' \
+        'and the paths metadata values.')
+    parser.add_argument('--devs', help = '--devs defines the outlier ' \
+        'threshold. Default is 1, higher values will further reduce the ' \
+        'data set.', dest = 'stddevs', default = 1.0)
+    parser.add_argument('--file', help = 'Output from Brian Carrier\'s fls ' \
+        '-arp (The Sleuth Kit) that has been saved to a file for processing.' \
+        , dest = 'filename')
+    parser.add_argument('--aspect1', help = '--aspect1 defines the first ' \
+        'field to be used to determine outliers. The default is metadata ' \
+        'addresses. Valid choices also include atime, mtime, ctime or ' \
+        'crtime.', dest = 'aspect1', default = 'meta_addr')
+    parser.add_argument('--aspect2', help = '--aspect2 defines the second ' \
+        'field to be used to determine outliers. The default is ctime. ' \
+        'Valid choices also include atime, mtime, ctime or crtime.', dest \
+        = 'aspect2', default = 'ctime')
+    parser.add_argument('--mode', help = '--mode can be "and" or "or" (no ' \
+        'quotes) meaning that with "and" a file will only be included in ' \
+        'the output if both aspect1 and aspect2 meet their respective ' \
+        'outlier threshold. If --mode is "or" a file will be included in ' \
+        'the output if either aspect is an outlier. Default mode is "and"' \
+        , dest = 'mode', default = 'and')
+    args = parser.parse_args()
+
+    if check_args(args):
+        get_deviants(args)
