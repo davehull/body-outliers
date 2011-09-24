@@ -52,7 +52,7 @@ def check_args(args):
 def get_deviants(args):
     zero_cnt = aspect1_zero_cnt = aspect2_zero_cnt = aspect2_total =\
     aspect1_total = fname_skip_cnt = dev_sum1 = dev_sum2 = bad_line =\
-    file_dev1 = file_dev2 = 0
+    file_dev1 = file_dev2 = total_lines = included_lines = 0
     aspect1_time  = aspect2_time = True
     current_path  = None
     stddevs       = float(args.stddevs)
@@ -62,6 +62,7 @@ def get_deviants(args):
 
     fi = open(args.filename, 'rb')
     for line in fi:
+        total_lines += 1
         try: 
             md5,ppath,inode,mode,uid,gid,size,atime,mtime,ctime,crtime = line.rstrip().split("|")
         except:
@@ -117,9 +118,8 @@ def get_deviants(args):
     print "[+] Discarded %d files with 0 for %s." % (aspect2_zero_cnt, args.aspect2) 
     print "[+] Discarded %d files named .. or ." % (fname_skip_cnt)
     print "[+] Discarded %d bad lines from %s." % (bad_line, args.filename)
-
-    print "Metadata %s %s %s outliers that are %2.2f standard deviations from average values for their respective paths." % (args.aspect1, args.mode, args.aspect2, stddevs)
-    print "==========================================================================================================================="
+    print "Metadata %s %s %s outliers that are more than %2.2f standard deviations from average values for their respective paths." % (args.aspect1, args.mode, args.aspect2, stddevs)
+    print "====================================================================================================================================="
 
     items = [(pname, fname) for pname, fname in path.items()]
     items.sort()
@@ -160,6 +160,8 @@ def get_deviants(args):
                 if args.mode == 'and':
                     if math.fabs(dev1[filename]) > outlier1 and math.fabs(dev2[filename]) > outlier2:
 
+                        included_lines += 1
+
                         file_dev1 = dev1[filename] / std_dev1
                         file_dev2 = dev2[filename] / std_dev2
 
@@ -198,6 +200,8 @@ def get_deviants(args):
                                 print "    file %s: %10d     devs: %14.2f      %s: %s     devs: %14.2f  file:    %s" % (args.aspect1, coord[0], file_dev1, args.aspect2, aspect2_time, file_dev2, filename)
                 else:
                     if math.fabs(dev1[filename]) > outlier1 or math.fabs(dev2[filename]) > outlier2:
+
+                        included_lines += 1
 
                         if std_dev1 == 0:
                             file_dev1 = 0
@@ -245,6 +249,7 @@ def get_deviants(args):
 
             aspect1_total = aspect2_total = dev_sum1 = dev_sum2 = 0
 
+    print "\n.:| %d lines in %s. %d files met or exceeded outlier threshold. Data reduction rate %2.4f%% |:." % (total_lines, args.filename, included_lines, 100 - float((included_lines * 1.0) / (total_lines * 1.0)))
 
 if __name__ == '__main__':
     import re, os, math, argparse
