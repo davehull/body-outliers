@@ -269,9 +269,8 @@ if __name__ == '__main__':
     parser.add_argument('--devs', help = '--devs defines the outlier ' \
         'threshold. Default is 1, higher values will further reduce the ' \
         'data set.', dest = 'stddevs', default = 1.0)
-    parser.add_argument('--file', help = 'Output from Brian Carrier\'s fls ' \
-        '-arp (The Sleuth Kit) that has been saved to a file for processing.' \
-        , dest = 'filename')
+    parser.add_argument('--file', help = 'An fls bodyfile, see The Sleuth ' \
+        'Kit.', dest = 'filename')
     parser.add_argument('--aspect1', help = '--aspect1 defines the first ' \
         'field to be used to determine outliers. The default is metadata ' \
         'addresses. Valid choices also include atime, mtime, ctime or ' \
