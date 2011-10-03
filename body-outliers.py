@@ -12,38 +12,47 @@ def check_args(args):
     print "[+] Checking command line arguments."
 
     try:
-        if float(args.stddevs) > 0:
+        if args.stddevs > 0:
             print "[+] Outlier threshold is %s" % args.stddevs
+        else:
+            raise Exception
     except: 
         print "[+] --devs must be a positive number (floating points are acceptable)."
+        parser.print_help()
         quit()
 
     if args.aspect1 == args.aspect2:
         print "[+] --aspect1 and --aspect2 are the same metadata element. They must be different."
+        parser.print_help()
         quit()
 
     if args.aspect1 not in ['atime', 'ctime', 'crtime', 'mtime', 'meta_addr']:
         print "[+] Invalid metadata element given for --aspect1: %s" % args.aspect1
+        parser.print_help()
         quit()
 
     if args.aspect2 not in ['atime', 'ctime', 'crtime', 'mtime', 'meta_addr']:
         print "[+] Invalid metadata element given for --aspect2: %s" % args.aspect2
+        parser.print_help()
         quit()
 
     try:
         fi = open(args.filename, 'rb')
     except:
         print "[+] Could not open %s for reading." % (args.filename)
+        parser.print_help()
         quit()
     if fi.read(1) == '0':
         print "[+] %s may be a bodyfile." % (args.filename)
     else:
         print "[+] %s does not appear to be a bodyfle." % (args.filename)
+        parser.print_help()
         quit()
     fi.close()
 
     if args.mode not in ['and', 'or']:
         print "[+] Invalid --mode argument: %s" % args.mode
+        parser.print_help()
         quit()
 
     return
@@ -252,7 +261,7 @@ def get_deviants(args):
     print "\n.:| %d lines in %s. %d files met or exceeded outlier threshold. Data reduction rate %2.4f%% |:." % (total_lines, args.filename, included_lines, 100 - float((included_lines * 1.0) / (total_lines * 1.0)))
 
 if __name__ == '__main__':
-    import re, os, math, argparse
+    import re, os, math, argparse, sys
     from time import gmtime, strftime 
 
     parser = argparse.ArgumentParser(description = \
@@ -268,9 +277,9 @@ if __name__ == '__main__':
         'and the paths metadata values.')
     parser.add_argument('--devs', help = '--devs defines the outlier ' \
         'threshold. Default is 1, higher values will further reduce the ' \
-        'data set.', dest = 'stddevs', default = 1.0)
+        'data set.', dest = 'stddevs', default = 1.0, type = float)
     parser.add_argument('--file', help = 'An fls bodyfile, see The Sleuth ' \
-        'Kit.', dest = 'filename')
+        'Kit.', dest = 'filename', required = True)
     parser.add_argument('--aspect1', help = '--aspect1 defines the first ' \
         'field to be used to determine outliers. The default is metadata ' \
         'addresses. Valid choices also include atime, mtime, ctime or ' \
@@ -285,6 +294,9 @@ if __name__ == '__main__':
         'outlier threshold. If --mode is "or" a file will be included in ' \
         'the output if either aspect is an outlier. Default mode is "and"' \
         , dest = 'mode', default = 'and')
+    if len(sys.argv) == 1:
+        parser.print_help()
+        quit()
     args = parser.parse_args()
 
     check_args(args)
